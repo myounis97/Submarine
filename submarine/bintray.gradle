@@ -31,7 +31,7 @@ bintray {
     key = properties.getProperty("bintray.apikey")
 
     pkg {
-        repo = 'maven'
+        repo = 'Submarine'
         name = 'com.myounis.submarine'
         configurations = ['archives']
         desc = 'An android library for loading MediaStore built on Copper library like Image, Video and Audio from local storage.'
