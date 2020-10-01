@@ -5,6 +5,12 @@ Submarine is an Android library for loading MediaStore using [Copper](https://gi
 ## [Copper](https://github.com/cashapp/copper)
 A content provider wrapper for reactive queries with Kotlin coroutines Flow or RxJava Observable.
 
+### Download 
+
+```
+implementation 'com.myounis.submarine:submarine:1.0.0'
+```
+
 ### Initialization
 
 ```java
@@ -56,3 +62,6 @@ disposables.add(submarine.loadImagesAndVideos(pageNumber, album)
                 
                 });
 ```
+
+
+
