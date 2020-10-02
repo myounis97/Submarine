@@ -9,6 +9,11 @@ A content provider wrapper for reactive queries with Kotlin coroutines Flow or R
 
 ```
 implementation 'com.myounis.submarine:submarine:1.0.0'
+
+implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+   
+implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
+
 ```
 
 ### Initialization
