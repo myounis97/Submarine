@@ -81,6 +81,41 @@ class Submarine private constructor(private val context: Context) {
 
     /*------------------------- Images and Videos -----------------------------*/
 
+    fun loadMedia(pageNumber: Int, @Nullable album: Album? = null): @NonNull Flowable<List<BaseMedia>> {
+
+        val projection = arrayOf(
+            MediaStore.Files.FileColumns.DATA,
+            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns.SIZE,
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.MIME_TYPE,
+            MediaStore.Files.FileColumns.WIDTH,
+            MediaStore.Files.FileColumns.HEIGHT,
+            MediaStore.Files.FileColumns.DATE_ADDED,
+            MediaStore.Files.FileColumns.DATE_MODIFIED
+        )
+
+        val offset = pageNumber * pageSize
+
+        val uri = MediaStore.Files.getContentUri("external").buildUpon()
+            .encodedQuery("limit=$offset,$pageSize")
+            .build()
+
+        var selection:String? = null
+
+        if(album != null)
+            selection =  MediaStore.Files.FileColumns.BUCKET_ID + "=" + album.id
+
+        return context.contentResolver
+            .observeQuery(uri, projection, selection,
+                null, null)
+            .mapToList {
+                fetchMediaFromCursor(it)
+            }
+            .toFlowable(BackpressureStrategy.LATEST)
+
+    }
+
     fun loadMedia(ids: List<Long>): @NonNull Flowable<List<BaseMedia>> {
 
         val projection = arrayOf(
