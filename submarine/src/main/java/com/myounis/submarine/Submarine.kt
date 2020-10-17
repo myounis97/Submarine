@@ -2,6 +2,7 @@ package com.myounis.submarine
 
 import android.content.Context
 import android.database.Cursor
+import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
@@ -16,6 +17,7 @@ import io.reactivex.rxjava3.annotations.NonNull
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.core.Flowable
 import java.io.IOException
+import java.lang.IllegalStateException
 
 
 class Submarine private constructor(private val context: Context) {
@@ -168,7 +170,11 @@ class Submarine private constructor(private val context: Context) {
                 .observeQuery(uri, projection, selection,
                         null, MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC")
                 .mapToList {
-                    fetchMediaFromCursor(it)
+                    val media = fetchMediaFromCursor(it)
+
+                    checkWidthAndHeight(media)
+
+                    return@mapToList media
                 }
                 .toFlowable(BackpressureStrategy.LATEST)
 
@@ -271,8 +277,6 @@ class Submarine private constructor(private val context: Context) {
                 video.dateModified = 0
             }
 
-            checkWidthAndHeight(video)
-
             return video
 
         } else {
@@ -291,11 +295,11 @@ class Submarine private constructor(private val context: Context) {
 
             image.size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE))
 
-            val width = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
+            var width = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
 
             image.width = width
 
-            val height = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
+            var height = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
 
             image.height = height
 
@@ -316,6 +320,32 @@ class Submarine private constructor(private val context: Context) {
                             ExifInterface(pfd.fileDescriptor)
                         } else {
                             ExifInterface(image.path!!)
+                        }
+
+                        if (image.width == 0 || image.height == 0) {
+
+                            context.contentResolver.openFileDescriptor(contentUri, "r").use { parcelFileDescriptor ->
+
+                                if (parcelFileDescriptor != null) {
+
+                                    val options = BitmapFactory.Options()
+
+                                    options.inJustDecodeBounds = true
+
+                                    BitmapFactory.decodeFileDescriptor(parcelFileDescriptor.fileDescriptor, null, options)
+
+                                    width = options.outWidth
+
+                                    height = options.outHeight
+
+                                    image.width = width
+
+                                    image.height = height
+
+                                }
+
+                            }
+
                         }
 
                         when (exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED)) {
@@ -368,8 +398,6 @@ class Submarine private constructor(private val context: Context) {
                 image.dateModified = 0
             }
 
-            checkWidthAndHeight(image)
-
             return image
 
         }
@@ -377,10 +405,8 @@ class Submarine private constructor(private val context: Context) {
     }
 
     private fun checkWidthAndHeight(media: BaseMedia) {
-
         if (media.width == 0 || media.height == 0)
             throw IllegalStateException("Width and Height must not be zeros")
-
     }
 
     /*------------------------- Audios -----------------------------*/
