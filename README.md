@@ -1,4 +1,4 @@
-# Submarine [ ![Download](https://api.bintray.com/packages/myounis97/Submarine/com.myounis.submarine/images/download.svg?version=1.0.0) ](https://bintray.com/myounis97/Submarine/com.myounis.submarine/1.0.0/link)
+# Submarine [ ![Download](https://api.bintray.com/packages/myounis97/Submarine/com.myounis.submarine/images/download.svg?version=1.0.1) ](https://bintray.com/myounis97/Submarine/com.myounis.submarine/1.0.1/link)
 
 Submarine is an Android library for loading MediaStore using [Copper](https://github.com/cashapp/copper) Library, like Image, Video and Audio from local storage.
 
