@@ -27,7 +27,7 @@ class Submarine private constructor(private val context: Context) {
     }
 
     enum class GalleryType {
-        IMAGES, VIDEOS, IMAGES_VIDEOS, AUDIO
+        ALL, IMAGES, VIDEOS, IMAGES_VIDEOS, AUDIO
     }
 
     private var pageSize: Int = DEFAULT_PAGE_SIZE
@@ -37,8 +37,8 @@ class Submarine private constructor(private val context: Context) {
     fun loadAlbums(galleryType: GalleryType): @NonNull Flowable<List<Album>> {
 
         val projection = arrayOf(
-                MediaStore.Files.FileColumns.BUCKET_ID,
-                MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME
+            MediaStore.Files.FileColumns.BUCKET_ID,
+            MediaStore.Files.FileColumns.BUCKET_DISPLAY_NAME
         )
 
         val selection = when (galleryType) {
@@ -52,6 +52,8 @@ class Submarine private constructor(private val context: Context) {
                     + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO)
 
             GalleryType.AUDIO -> MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO
+
+            GalleryType.ALL -> null
 
         }
 
@@ -96,8 +98,9 @@ class Submarine private constructor(private val context: Context) {
         val uri = MediaStore.Files.getContentUri("external")
 
         val selection = "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE +
-                " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO + ")" +
-                " AND " + MediaStore.Files.FileColumns._ID + " IN ( " + TextUtils.join(",", ids) + " )";
+                    " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO +
+                    " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO + ")" +
+                    " AND " + MediaStore.Files.FileColumns._ID + " IN ( " + TextUtils.join(",", ids) + " )"
 
         return context.contentResolver
                 .observeQuery(uri, projection, selection,
@@ -125,9 +128,11 @@ class Submarine private constructor(private val context: Context) {
 
         val uri = MediaStore.Files.getContentUri("external")
 
-        val selection = "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE +
-                " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO + ")" +
-                " AND " + MediaStore.Files.FileColumns._ID + "=" + "'$id'"
+        val selection =
+            "(" + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE +
+                    " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO +
+                    " OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO + ")" +
+                    " AND " + MediaStore.Files.FileColumns._ID + "=" + "'$id'"
 
         return context.contentResolver
                 .observeQuery(uri, projection, selection,
@@ -777,11 +782,11 @@ class Submarine private constructor(private val context: Context) {
 
         image.size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE))
 
-        val width = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
+        var width = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
 
         image.width = width
 
-        val height = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
+        var height = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
 
         image.height = height
 
@@ -802,6 +807,33 @@ class Submarine private constructor(private val context: Context) {
                         ExifInterface(pfd.fileDescriptor)
                     } else {
                         ExifInterface(image.path!!)
+                    }
+
+                    if (image.width == 0 || image.height == 0) {
+
+                        context.contentResolver.openFileDescriptor(contentUri, "r")
+                            .use { parcelFileDescriptor ->
+
+                                if (parcelFileDescriptor != null) {
+
+                                    val options = BitmapFactory.Options()
+
+                                    options.inJustDecodeBounds = true
+
+                                    BitmapFactory.decodeFileDescriptor(parcelFileDescriptor.fileDescriptor, null, options)
+
+                                    width = options.outWidth
+
+                                    height = options.outHeight
+
+                                    image.width = width
+
+                                    image.height = height
+
+                                }
+
+                            }
+
                     }
 
                     when (exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED)) {
