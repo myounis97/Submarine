@@ -1,4 +1,4 @@
-# Submarine [ ![Download](https://api.bintray.com/packages/myounis97/Submarine/com.myounis.submarine/images/download.svg?version=1.0.2) ](https://bintray.com/myounis97/Submarine/com.myounis.submarine/1.0.2/link)
+# Submarine [ ![Download](https://api.bintray.com/packages/myounis97/Submarine/com.myounis.submarine/images/download.svg?version=1.0.3) ](https://bintray.com/myounis97/Submarine/com.myounis.submarine/1.0.3/link)
 
 Submarine is an Android library for loading MediaStore using [Copper](https://github.com/cashapp/copper) Library, like Image, Video and Audio from local storage.
 
@@ -8,7 +8,7 @@ A content provider wrapper for reactive queries with Kotlin coroutines Flow or R
 ### Download 
 
 ```
-implementation 'com.myounis.submarine:submarine:1.0.0'
+implementation 'com.myounis.submarine:submarine:1.0.3'
 
 implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
    
