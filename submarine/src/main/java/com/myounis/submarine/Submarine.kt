@@ -286,13 +286,7 @@ class Submarine private constructor(private val context: Context) {
                 uri, projection, selection,
                 null, MediaStore.Files.FileColumns.DATE_MODIFIED + " ${sortBy.name}"
             )
-            .mapToList {
-                val media = fetchMediaFromCursor(it)
-
-                checkWidthAndHeight(media)
-
-                return@mapToList media
-            }
+            .mapToList { fetchMediaFromCursor(it) }
             .flatMap { it ->
                 Observable.fromIterable(it)
                     .flatMap { baseMedia ->
